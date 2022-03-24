@@ -16,7 +16,7 @@ var userList = []user{
 	{"user3", "pass3"},
 }
 
-func registerNewUser(username string, password string) (*user, error) {
+func registerNewUser(username, password string) (*user, error) {
 	if strings.TrimSpace(username) == "" || strings.TrimSpace(password) == "" {
 		return nil, errors.New("blank username/password provided")
 	}
@@ -30,6 +30,10 @@ func registerNewUser(username string, password string) (*user, error) {
 	newUser := user{username, password}
 	userList = append(userList, newUser)
 	return &newUser, nil
+}
+
+func isUserValid(username, password string) bool {
+	return false
 }
 
 func isUsernameAvailable(username string) bool {
