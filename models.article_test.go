@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 // Test the function that fetches all articles
 func TestGetAllArticles(t *testing.T) {
@@ -21,5 +24,29 @@ func TestGetAllArticles(t *testing.T) {
 			t.Fail()
 			break
 		}
+	}
+}
+
+func Test_getArticleById(t *testing.T) {
+	tests := []struct {
+		name    string
+		id      int
+		want    *article
+		wantErr bool
+	}{
+		{"should find an existing article", 1, &articleList[0], false},
+		{"should return an error on non-existent article", 10, nil, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := getArticleById(tt.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getArticleById() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getArticleById() got = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

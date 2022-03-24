@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"encoding/xml"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -29,5 +31,98 @@ func TestShowIndexPageUnauthenticated(t *testing.T) {
 		pageOK := err == nil && strings.Index(string(p), "<title>Home Page</title>") > 0
 
 		return statusOK && pageOK
+	})
+}
+
+func TestArticleListRendering(t *testing.T) {
+	encoding := "application/json"
+	r := getRouter(false)
+	r.GET("/", showIndexPage)
+	req, _ := http.NewRequest("GET", "/", nil)
+	req.Header.Set("Accept", encoding)
+
+	testHTTPResponse(t, r, req, func(w *httptest.ResponseRecorder) bool {
+		statusOK := w.Code == http.StatusOK
+		p, err := ioutil.ReadAll(w.Body)
+		responseTypeOK := strings.Contains(w.Result().Header.Get("Content-Type"), encoding)
+		expectedBytes, _ := json.Marshal(articleList)
+		bodyOK := string(p) == string(expectedBytes)
+
+		if !statusOK {
+			t.Errorf("Expected %d, got %d\n", http.StatusOK, w.Code)
+		}
+
+		if !responseTypeOK {
+			t.Errorf("Expected %s, got %s\n", encoding, w.Result().Header.Get("Content-Type"))
+		}
+
+		if !bodyOK {
+			t.Errorf("Expected %s, got %s\n", string(expectedBytes), string(p))
+		}
+
+		return err == nil && statusOK && responseTypeOK && bodyOK
+	})
+
+	encoding = "application/xml"
+	req, _ = http.NewRequest("GET", "/", nil)
+	req.Header.Set("Accept", encoding)
+
+	testHTTPResponse(t, r, req, func(w *httptest.ResponseRecorder) bool {
+		statusOK := w.Code == http.StatusOK
+		p, err := ioutil.ReadAll(w.Body)
+		responseTypeOK := strings.Contains(w.Result().Header.Get("Content-Type"), encoding)
+		expectedBytes, _ := xml.Marshal(articleList)
+		bodyOK := string(p) == string(expectedBytes)
+
+		if !statusOK {
+			t.Errorf("Expected %d, got %d\n", http.StatusOK, w.Code)
+		}
+
+		if !responseTypeOK {
+			t.Errorf("Expected %s, got %s\n", encoding, w.Result().Header.Get("Content-Type"))
+		}
+
+		if !bodyOK {
+			t.Errorf("Expected %s, got %s\n", string(expectedBytes), string(p))
+		}
+
+		return err == nil && statusOK && responseTypeOK && bodyOK
+	})
+}
+
+func TestSingleArticleRendering(t *testing.T) {
+	encoding := "text/html"
+	r := getRouter(true)
+	r.GET("/article/view/:article_id", getArticle)
+	req, _ := http.NewRequest("GET", "/article/view/1", nil)
+
+	testHTTPResponse(t, r, req, func(w *httptest.ResponseRecorder) bool {
+		statusOK := w.Code == http.StatusOK
+		responseTypeOK := strings.Contains(w.Result().Header.Get("Content-Type"), encoding)
+		p, err := ioutil.ReadAll(w.Body)
+		bodyOK := strings.Contains(string(p), "<h1>Article 1</h1>")
+
+		if !statusOK {
+			t.Errorf("Expected %d, got %d\n", http.StatusOK, w.Code)
+		}
+
+		if !responseTypeOK {
+			t.Errorf("Expected %s, got %s\n", encoding, w.Result().Header.Get("Content-Type"))
+		}
+
+		return err == nil && statusOK && responseTypeOK && bodyOK
+	})
+
+	req, _ = http.NewRequest("GET", "/article/view/55", nil)
+
+	testHTTPResponse(t, r, req, func(w *httptest.ResponseRecorder) bool {
+		statusOK := w.Code == http.StatusNotFound
+		return statusOK
+	})
+
+	req, _ = http.NewRequest("GET", "/article/view/invalid_id", nil)
+
+	testHTTPResponse(t, r, req, func(w *httptest.ResponseRecorder) bool {
+		return w.Code == http.StatusBadRequest
 	})
 }
