@@ -8,7 +8,7 @@ import (
 func main() {
 	router := gin.Default()
 	router.LoadHTMLGlob("./templates/*")
-	router.GET("/", showIndexPage)
+	initializeRoutes(router)
 
 	err := router.Run()
 	if err != nil {
