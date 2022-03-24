@@ -1,6 +1,9 @@
 package main
 
-import "errors"
+import (
+	"errors"
+	"strings"
+)
 
 type user struct {
 	Username string `json:"username"`
@@ -14,9 +17,27 @@ var userList = []user{
 }
 
 func registerNewUser(username string, password string) (*user, error) {
-	return nil, errors.New("implement this function!")
+	if strings.TrimSpace(username) == "" || strings.TrimSpace(password) == "" {
+		return nil, errors.New("blank username/password provided")
+	}
+
+	if !isUsernameAvailable(username) {
+		return nil, errors.New("username already taken")
+	}
+
+	// TODO: Implement more password validation if the front-end does not implement validation
+
+	newUser := user{username, password}
+	userList = append(userList, newUser)
+	return &newUser, nil
 }
 
 func isUsernameAvailable(username string) bool {
-	return false
+	for _, u := range userList {
+		if u.Username == username {
+			return false
+		}
+	}
+
+	return true
 }

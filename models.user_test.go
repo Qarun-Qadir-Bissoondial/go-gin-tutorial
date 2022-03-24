@@ -25,17 +25,20 @@ func TestUsernameAvailability(t *testing.T) {
 	saveLists()
 
 	if !isUsernameAvailable("newuser") {
-		t.Fail()
+		t.Error("newuser should be available")
 	}
 
 	if isUsernameAvailable("user1") {
-		t.Fail()
+		t.Errorf("user1 should not be available")
 	}
 
-	registerNewUser("newuser", "newpass")
+	_, err := registerNewUser("newuser", "newpass")
+	if err != nil {
+		t.Errorf("newuser could not have been added\n %v\n", err)
+	}
 
 	if isUsernameAvailable("newuser") {
-		t.Fail()
+		t.Errorf("newuser should not be available after it was added")
 	}
 
 	restoreLists()
